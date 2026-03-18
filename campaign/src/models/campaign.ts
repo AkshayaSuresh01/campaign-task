@@ -82,4 +82,4 @@ const Campaign = sequelize.define(
   },
 );
 
-module.exports = Campaign;
+export default Campaign;
