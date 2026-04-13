@@ -1,7 +1,5 @@
 import express from "express";
-import * as campaign from "../controllers/campaign";
-import * as events from "../controllers/event";
-import * as messages from "../controllers/message";
+import { campaign, events, messages } from "../controllers";
 
 const router = express.Router();
 
