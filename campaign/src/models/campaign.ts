@@ -30,6 +30,11 @@ const Campaign = sequelize.define(
     totalRecipients: { type: DataTypes.INTEGER, defaultValue: 0 },
     subject: { type: DataTypes.STRING(255), allowNull: true },
     senderName: { type: DataTypes.STRING(100), allowNull: true },
+    type: {
+      type: DataTypes.ENUM("email", "sms", "push", "in-app"),
+      allowNull: false,
+      defaultValue: "email",
+    },
     senderEmail: {
       type: DataTypes.STRING(255),
       allowNull: true,

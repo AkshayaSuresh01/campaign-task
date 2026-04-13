@@ -2,6 +2,9 @@ import express from "express";
 import cors from "cors";
 import campaignRoutes from "./routes/campaign";
 import userRoutes from "./routes/user";
+import eventRouter from "./routes/event";
+import messageRouter from "./routes/message";
+
 import { sequelize } from "./models";
 
 const app = express();
@@ -22,6 +25,8 @@ app.use(express.json());
 
 app.use("/campaigns", campaignRoutes);
 app.use("/users", userRoutes);
+app.use("/events", eventRouter);
+app.use("/messages", messageRouter);
 
 const PORT = process.env.PORT || 3000;
 
