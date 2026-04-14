@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import sequelize from "../config/database";
+import { EVENT_TYPES } from "../types";
 
 const Event = sequelize.define(
   "Event",
@@ -11,19 +12,8 @@ const Event = sequelize.define(
     },
 
     type: {
-      type: DataTypes.ENUM(
-        "campaign_started",
-        "campaign_paused",
-        "campaign_completed",
-        "email_sent",
-        "email_opened",
-        "email_clicked",
-        "email_bounced",
-        "user_converted",
-        "user_unsubscribed",
-        "custom",
-      ),
-      allowNull: false,
+      type: DataTypes.ENUM(...Object.values(EVENT_TYPES)),
+      allowNUll: true,
     },
 
     name: {

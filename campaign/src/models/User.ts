@@ -4,6 +4,7 @@ import { DataTypes, Model, Optional } from "sequelize";
 import sequelize from "../config/database";
 import { UserRole } from "../types";
 
+// Seperately I not needed -> UserAttribute
 export interface IUserAttributes {
   id: string;
   name: string;
@@ -57,6 +58,7 @@ User.init(
       },
     },
     role: {
+      // Enum using const?
       type: DataTypes.ENUM("admin", "manager", "viewer"),
       allowNull: false,
       defaultValue: "viewer",

@@ -28,12 +28,14 @@ const Message = sequelize.define(
     },
 
     direction: {
+      //same
       type: DataTypes.ENUM("outbound", "inbound"),
       defaultValue: "outbound",
       allowNull: false,
     },
 
     status: {
+      //same
       type: DataTypes.ENUM("pending", "sent", "delivered", "failed", "bounced"),
       defaultValue: "pending",
       allowNull: false,

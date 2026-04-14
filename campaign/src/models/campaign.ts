@@ -15,11 +15,13 @@ const Campaign = sequelize.define(
       validate: { notEmpty: true, len: [1, 255] },
     },
     description: { type: DataTypes.TEXT, allowNull: true },
+    //const enum
     status: {
       type: DataTypes.ENUM("active", "completed", "draft", "paused"),
       defaultValue: "draft",
       allowNull: false,
     },
+    // below items needed?
     tags: { type: DataTypes.ARRAY(DataTypes.STRING), defaultValue: [] },
     delivered: { type: DataTypes.INTEGER, defaultValue: 0 },
     opened: { type: DataTypes.INTEGER, defaultValue: 0 },
