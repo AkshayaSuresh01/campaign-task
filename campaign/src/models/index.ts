@@ -1,6 +1,6 @@
 import sequelize from "../config/database";
 
-import User from "./User";
+import User from "./user";
 import Campaign from "../models/campaign";
 import Event from "../models/events";
 import Message from "../models/message";
