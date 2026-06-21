@@ -12,7 +12,7 @@ export interface IUserAttributes {
   updatedAt?: Date;
 }
 
-interface IUserCreationAttributes extends Optional<
+export interface IUserCreationAttributes extends Optional<
   IUserAttributes,
   "id" | "avatarUrl" | "createdAt" | "updatedAt"
 > {}
@@ -26,7 +26,6 @@ class User
   public email!: string;
   public role!: UserRole;
   public avatarUrl?: string;
-
   public readonly createdAt!: Date;
   public readonly updatedAt!: Date;
 }
@@ -55,9 +54,9 @@ User.init(
       },
     },
     role: {
-      type: DataTypes.ENUM("admin", "manager", "viewer"),
+      type: DataTypes.ENUM(...Object.values(UserRole)),
       allowNull: false,
-      defaultValue: "viewer",
+      defaultValue: UserRole.Viewer,
     },
     avatarUrl: {
       type: DataTypes.STRING(500),

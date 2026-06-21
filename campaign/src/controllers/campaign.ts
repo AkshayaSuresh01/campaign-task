@@ -1,47 +1,71 @@
 import { Request, Response } from "express";
+import { Op } from "sequelize";
 import { Campaign, User } from "../models";
+import { CampaignStatus, ICampaignAttributes } from "../models";
 import { CreateCampaignBody, UpdateCampaignBody } from "../types";
+import {
+  IdParam,
+  PaginatedQuery,
+  parsePagination,
+  sendError,
+  sendSuccess,
+  catchError,
+} from "./common";
 
-export const getAll = async (req: Request, res: Response): Promise<void> => {
+type GetAllQuery = PaginatedQuery & {
+  status?: CampaignStatus;
+  userId?: string;
+  search?: string;
+};
+
+const userInclude = {
+  model: User,
+  as: "user",
+  attributes: ["id", "name", "email", "role", "avatarUrl"],
+};
+
+const computeMetrics = (c: ICampaignAttributes) => {
+  const delivered = c.delivered ?? 0;
+  const total = c.totalRecipients ?? 0;
+  const safe = (n: number) =>
+    delivered > 0 ? +((n / delivered) * 100).toFixed(1) : 0;
+
+  return {
+    deliveredRate: total > 0 ? +((delivered / total) * 100).toFixed(1) : 0,
+    openRate: safe(c.opened ?? 0),
+    clickRate: safe(c.clicked ?? 0),
+    conversionRate: safe(c.converted ?? 0),
+    bounceRate: safe(c.bounced ?? 0),
+  };
+};
+
+export const getAll = async (
+  req: Request<{}, {}, {}, GetAllQuery>,
+  res: Response,
+): Promise<void> => {
   try {
-    const {
-      page = "1",
-      limit = "10",
-      status,
-      userId,
-      search,
-    } = req.query as any;
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-    const offset = (pageNum - 1) * limitNum;
+    const { page, limit, status, userId, search } = req.query;
+    const { pageNum, limitNum, offset } = parsePagination(page, limit);
 
-    const where: any = {};
+    const where: Record<string, unknown> = {};
     if (status) where.status = status;
     if (userId) where.userId = userId;
+    if (search) where.name = { [Op.iLike]: `%${search}%` };
 
     const { count, rows } = await Campaign.findAndCountAll({
       where,
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "name", "email", "role", "avatarUrl"],
-        },
-      ],
+      include: [userInclude],
       limit: limitNum,
       offset,
       order: [["createdAt", "DESC"]],
     });
 
-    const data = rows.map((c: any) => {
-      const campaign = c.toJSON();
-      campaign.metrics = computeMetrics(campaign);
-      return campaign;
+    const data = rows.map((row) => {
+      const campaign = row.toJSON() as ICampaignAttributes;
+      return { ...campaign, metrics: computeMetrics(campaign) };
     });
 
-    res.json({
-      success: true,
-      data,
+    sendSuccess(res, data, 200, {
       pagination: {
         total: count,
         page: pageNum,
@@ -50,7 +74,28 @@ export const getAll = async (req: Request, res: Response): Promise<void> => {
       },
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    catchError(res, error);
+  }
+};
+
+export const getCampaignById = async (
+  req: Request<IdParam>,
+  res: Response,
+): Promise<void> => {
+  try {
+    const campaign = await Campaign.findByPk(req.params.id, {
+      include: [userInclude],
+    });
+
+    if (!campaign) {
+      sendError(res, 404, "Campaign not found");
+      return;
+    }
+
+    const data = campaign.toJSON() as ICampaignAttributes;
+    sendSuccess(res, { ...data, metrics: computeMetrics(data) });
+  } catch (error) {
+    catchError(res, error);
   }
 };
 
@@ -58,92 +103,49 @@ export const create = async (
   req: Request<{}, {}, CreateCampaignBody>,
   res: Response,
 ): Promise<void> => {
+  console.log("coming hre");
   try {
-    const newCampaign = await Campaign.create(req.body as any);
-    res.status(201).json({ success: true, data: newCampaign });
+    const campaign = await Campaign.create(req.body);
+    sendSuccess(res, campaign.toJSON(), 201);
   } catch (error) {
-    console.error(error);
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to create campaign" });
-  }
-};
-
-export const getCampaignById = async (
-  req: Request,
-  res: Response,
-): Promise<void> => {
-  const { id } = req.params;
-  try {
-    const campaign: any = await Campaign.findByPk(id, {
-      include: [
-        {
-          model: User,
-          as: "user",
-          attributes: ["id", "name", "email", "role", "avatarUrl"],
-        },
-      ],
-    });
-    if (!campaign) {
-      res.status(404).json({ success: false, message: "Campaign not found" });
-      return;
-    }
-    const data = campaign.toJSON();
-    data.metrics = computeMetrics(data);
-    res.json({ success: true, data });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    catchError(res, error);
   }
 };
 
 export const update = async (
-  req: Request<{ id: string }, {}, UpdateCampaignBody>,
+  req: Request<IdParam, {}, UpdateCampaignBody>,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
   try {
-    const campaign = await Campaign.findByPk(id);
+    const campaign = await Campaign.findByPk(req.params.id);
+
     if (!campaign) {
-      res.status(404).json({ success: false, message: "Campaign not found" });
+      sendError(res, 404, "Campaign not found");
       return;
     }
+
     await campaign.update(req.body);
-    res.json({ success: true, data: campaign });
+    sendSuccess(res, campaign);
   } catch (error) {
-    res
-      .status(500)
-      .json({ success: false, message: "Failed to update campaign" });
+    catchError(res, error);
   }
 };
 
-export const remove = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+export const remove = async (
+  req: Request<IdParam>,
+  res: Response,
+): Promise<void> => {
   try {
-    const campaign = await Campaign.findByPk(id);
+    const campaign = await Campaign.findByPk(req.params.id);
+
     if (!campaign) {
-      res.status(404).json({ success: false, message: "Campaign not found" });
+      sendError(res, 404, "Campaign not found");
       return;
     }
+
     await campaign.destroy();
-    res.json({
-      success: true,
-      data: null,
-      message: "Campaign deleted successfully",
-    });
+    sendSuccess(res, null, 200, { message: "Campaign deleted successfully" });
   } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    catchError(res, error);
   }
 };
-
-function computeMetrics(c: any) {
-  const d = c.delivered || 0;
-  const safe = (n: number) => (d > 0 ? +((n / d) * 100).toFixed(1) : 0);
-  return {
-    deliveredRate:
-      c.totalRecipients > 0 ? +((d / c.totalRecipients) * 100).toFixed(1) : 0,
-    openRate: safe(c.opened),
-    clickRate: safe(c.clicked),
-    conversionRate: safe(c.converted),
-    bounceRate: safe(c.bounced),
-  };
-}

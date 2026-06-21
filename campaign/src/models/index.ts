@@ -1,9 +1,9 @@
 import sequelize from "../config/database";
 
 import User from "./user";
-import Campaign from "../models/campaign";
-import Event from "../models/events";
-import Message from "../models/message";
+import Campaign from "./campaign";
+import Event from "./events";
+import Message from "./message";
 
 User.hasMany(Campaign, { foreignKey: "userId", as: "campaigns" });
 Campaign.belongsTo(User, { foreignKey: "userId", as: "user" });
@@ -22,3 +22,12 @@ Message.belongsTo(Event, {
 });
 
 export { sequelize, User, Campaign, Event, Message };
+
+export type { IUserAttributes, IUserCreationAttributes } from "./user";
+export type {
+  ICampaignAttributes,
+  ICampaignCreationAttributes,
+} from "./campaign";
+export type { IEventAttributes, IEventCreationAttributes } from "./events";
+export type { IMessageAttributes, IMessageCreationAttributes } from "./message";
+export * from "../types";

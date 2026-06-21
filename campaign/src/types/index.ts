@@ -1,22 +1,3 @@
-export const CAMPAIGN_STATUS = {
-  ACTIVE: "active",
-  COMPLETED: "completed",
-  DRAFT: "draft",
-  PAUSED: "paused",
-} as const;
-
-export type CampaignStatus =
-  (typeof CAMPAIGN_STATUS)[keyof typeof CAMPAIGN_STATUS];
-
-export const CAMPAIGN_TYPE = {
-  EMAIL: "email",
-  SMS: "sms",
-  PUSH: "push",
-  IN_APP: "in-app",
-} as const;
-
-export type CampaignType = (typeof CAMPAIGN_TYPE)[keyof typeof CAMPAIGN_TYPE];
-
 export const TRIGGER_TYPE = {
   MANUAL: "manual",
   SCHEDULED: "scheduled",
@@ -25,14 +6,6 @@ export const TRIGGER_TYPE = {
 } as const;
 
 export type TriggerType = (typeof TRIGGER_TYPE)[keyof typeof TRIGGER_TYPE];
-
-export const USER_ROLE = {
-  ADMIN: "admin",
-  MANAGER: "manager",
-  VIEWER: "viewer",
-} as const;
-
-export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
 
 export const SORT_ORDER = {
   ASC: "ASC",
@@ -126,6 +99,7 @@ export interface CreateCampaignBody {
   totalRecipients?: number;
   scheduledAt?: string;
   userId: string;
+  status: CampaignStatus;
 }
 
 export interface UpdateCampaignBody {
@@ -160,20 +134,14 @@ export interface CampaignStats {
   };
 }
 
-export const EVENT_TYPES = {
-  CAMPAIGN_STARTED: "campaign_started",
-  CAMPAIGN_PAUSED: "campaign_paused",
-  CAMPAIGN_COMPLETED: "campaign_completed",
-  EMAIL_SENT: "email_sent",
-  EMAIL_OPENED: "email_opened",
-  EMAIL_CLICKED: "email_clicked",
-  EMAIL_BOUNCED: "email_bounced",
-  USER_CONVERTED: "user_converted",
-  USER_UNSUBSCRIBED: "user_unsubscribed",
-  CUSTOM: "custom",
-} as const;
-
-export type EventType = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];
+export enum EventType {
+  Delivered = "delivered",
+  Opened = "opened",
+  Clicked = "clicked",
+  Converted = "converted",
+  Bounced = "bounced",
+  Unsubscribed = "unsubscribed",
+}
 
 export interface CreateEventBody {
   type: EventType;
@@ -192,35 +160,6 @@ export interface EventQueryParams {
   page?: string;
   limit?: string;
 }
-
-export const MESSAGE_STATUS = {
-  PENDING: "pending",
-  SENT: "sent",
-  DELIVERED: "delivered",
-  FAILED: "failed",
-  BOUNCED: "bounced",
-} as const;
-
-export type MessageStatus =
-  (typeof MESSAGE_STATUS)[keyof typeof MESSAGE_STATUS];
-
-export const MESSAGE_CHANNEL = {
-  EMAIL: "email",
-  SMS: "sms",
-  PUSH: "push",
-  IN_APP: "in-app",
-} as const;
-
-export type MessageChannel =
-  (typeof MESSAGE_CHANNEL)[keyof typeof MESSAGE_CHANNEL];
-
-export const MESSAGE_DIRECTION = {
-  OUTBOUND: "outbound",
-  INBOUND: "inbound",
-} as const;
-
-export type MessageDirection =
-  (typeof MESSAGE_DIRECTION)[keyof typeof MESSAGE_DIRECTION];
 
 export interface Message {
   id: string;
@@ -315,4 +254,44 @@ export interface CampaignEvent {
   messageCount?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export enum UserRole {
+  Admin = "admin",
+  Manager = "manager",
+  Viewer = "viewer",
+}
+
+export enum CampaignStatus {
+  Active = "active",
+  Completed = "completed",
+  Draft = "draft",
+  Paused = "paused",
+}
+
+export enum CampaignType {
+  Email = "email",
+  SMS = "sms",
+  Push = "push",
+  InApp = "in-app",
+}
+
+export enum MessageChannel {
+  Email = "email",
+  SMS = "sms",
+  Push = "push",
+  InApp = "in-app",
+}
+
+export enum MessageDirection {
+  Outbound = "outbound",
+  Inbound = "inbound",
+}
+
+export enum MessageStatus {
+  Pending = "pending",
+  Sent = "sent",
+  Delivered = "delivered",
+  Failed = "failed",
+  Bounced = "bounced",
 }

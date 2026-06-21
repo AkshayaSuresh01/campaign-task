@@ -1,33 +1,37 @@
 import { Request, Response } from "express";
 import { User } from "../models";
+import { IdParam, sendError, sendSuccess, catchError } from "./common";
+
+const userAttributes = ["id", "name", "email", "role", "avatarUrl"] as const;
 
 export const getAll = async (_req: Request, res: Response): Promise<void> => {
   try {
     const users = await User.findAll({
-      attributes: ["id", "name", "email", "role", "avatarUrl"],
+      attributes: [...userAttributes],
       order: [["name", "ASC"]],
     });
-    res.json({ success: true, data: users });
+    sendSuccess(res, users);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    catchError(res, error);
   }
 };
 
 export const getUserById = async (
-  req: Request,
+  req: Request<IdParam>,
   res: Response,
 ): Promise<void> => {
-  const { id } = req.params;
   try {
-    const user = await User.findByPk(id, {
-      attributes: ["id", "name", "email", "role", "avatarUrl"],
+    const user = await User.findByPk(req.params.id, {
+      attributes: [...userAttributes],
     });
+
     if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
+      sendError(res, 404, "User not found");
       return;
     }
-    res.json({ success: true, data: user });
+
+    sendSuccess(res, user);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Internal Server Error" });
+    catchError(res, error);
   }
 };
